@@ -10,3 +10,8 @@ Route::get('/user', function (Request $request) {
 Route::get('/home', function () {
     return response()->json(['teste'=> 10]);
     });
+
+Route::get('/produtos', function () {
+    #return view('produtos');
+    return response()->json(['produtos'=> 0]);
+    });
