@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProductCategory;
 use App\Models\Products;
+use App\Http\Services\ProductService;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -41,45 +42,90 @@ class ProductController extends Controller
         return Products::find($id);
     }
 
-    public function search(Request $request){
+    public function search(Request $request)
+    {
         try {
-            $perPage = $request->query('per_page',15);
+            $perPage = $request->query('per_page', 15);
             $perPage = min(max($perPage, 1), 100);
 
-            $query= Products::query();
+            $query = Products::query();
+            $service = new ProductService($request);
+            $filteredQuery = $service->apply($query);
             
-            if ($request->has('name')){
-                $query->where('name', 'like', '%' . $request->query('name') . '%');
-            }
-
-            if ($request->has('category')){
-                $query->where('category', $request->query('category'));
-            }
-
-            if ($request->has('min_price')){
-                $query->where('price', '>=', $request->query('min_price'));
-            }
-
-            if ($request->has('max_price')){
-                $query->where('price', '<=', $request->query('max_price'));
-            }
-
-            $sortBy = $request->query('sort_by','name');
-            $sortOrder = $request->query('sort_order', 'asc');
-            $query->orderBy($sortBy, $sortOrder);
-
-            $produtos = $query->paginate($perPage);
+            $produtos = $filteredQuery->paginate($perPage);
 
             return response()->json([
-                'message' =>'Produtos recuperados com successo',
+                'message' => 'Produtos recuperados com sucesso',
                 'produtos' => $produtos
-            ],200);
-        } catch (\Exception $e){
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao recuperar produtos',
-                'error' => $e ->getMessage()
+                'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function destroy(string $id)
+    {
+        try {
+            $produto = Products::findOrFail($id);
+            $produto->delete();
+
+            return response()->json([
+                'message' => 'Produto deletado com sucesso!'
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Produto não encontrado'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao deletar produto',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
+    public function update(Request $request, string $id)
+    {
+        try {
+            // Busca o produto pelo ID
+            $produto = Products::findOrFail($id);
+
+            // Validação dos dados recebidos
+            $request->validate([
+                'name' => 'string|max:255|unique:products,name,' . $id,
+                'description' => 'string|max:300',
+                'price' => 'numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
+                'stock' => 'integer|min:1|max:9999',
+                'category' => 'string|in:' . implode(',', ProductCategory::values()),
+            ]);
+
+            // Atualiza o produto
+            $produto->update([
+                'name' => $request->name ?? $produto->name,
+                'description' => $request->description ?? $produto->description,
+                'price' => $request->price ?? $produto->price,
+                'stock' => $request->stock ?? $produto->stock,
+                'category' => $request->category ? ProductCategory::getCategory($request->category)->value : $produto->category,
+            ]);
+
+            return response()->json([
+                'message' => 'Produto atualizado com sucesso!',
+                'produto' => $produto
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Produto não encontrado'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao atualizar produto',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}
 

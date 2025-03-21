@@ -17,12 +17,36 @@ enum ProductCategory: string
 
     public static function values(): array
     {
-        return array_map(fn (self $case) => $case->value, self::cases());
+        return [
+            // Inglês
+            'electronics',
+            'clothing',
+            'food',
+            'beverages',
+            'furniture',
+            'books',
+            'toys',
+            'cosmetics',
+            'sports',
+            'accessories',
+            // Português
+            'eletrônicos',
+            'roupas',
+            'alimentos',
+            'bebidas',
+            'móveis',
+            'livros',
+            'brinquedos',
+            'cosméticos',
+            'esportes',
+            'acessórios'
+        ];
     }
 
     public static function getCategory(string $category): self
     {
         return match ($category) {
+            // Inglês
             'electronics' => self::ELECTRONICS,
             'clothing' => self::CLOTHING,
             'food' => self::FOOD,
@@ -33,7 +57,18 @@ enum ProductCategory: string
             'cosmetics' => self::COSMETICS,
             'sports' => self::SPORTS,
             'accessories' => self::ACCESSORIES,
-            default => throw new \ValueError("Invalid category: '$category'")
+            // Português
+            'eletrônicos' => self::ELECTRONICS,
+            'roupas' => self::CLOTHING,
+            'alimentos' => self::FOOD,
+            'bebidas' => self::BEVERAGES,
+            'móveis' => self::FURNITURE,
+            'livros' => self::BOOKS,
+            'brinquedos' => self::TOYS,
+            'cosméticos' => self::COSMETICS,
+            'esportes' => self::SPORTS,
+            'acessórios' => self::ACCESSORIES,
+            default => throw new \ValueError("Categoria inválida: '$category'")
         };
     }
 }

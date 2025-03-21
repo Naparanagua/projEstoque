@@ -15,11 +15,23 @@ Route::get('/home', function () {
 Route::prefix('products')-> controller(ProductController::class)->group(static function(){
     Route::get("",'search');
     Route::post("",'store');
-
+   //products/{product}/categories/{category}
+   //products
     Route::prefix('{product}')->group(static function(){
         Route::get("", 'show');
         Route::patch("",'update');
         Route::delete("", 'destroy');
+
+        // Route::prefix('categories')->group(static function(){
+        //     Route::get("",'search');
+        //     Route::post("",'store');
+
+        //     Route::prefix('{category}')->group(static function(){
+        //         Route::get("", 'show');
+        //         Route::patch("",'update');
+        //         Route::delete("", 'destroy');
+        //     });
+        // });
     });
 });
 
